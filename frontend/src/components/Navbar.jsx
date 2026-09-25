@@ -1,46 +1,61 @@
-import React, { useState } from 'react';
-import { Navigation, Sparkles, Menu, X } from 'lucide-react';
+import React from 'react';
+import { Plane } from 'lucide-react';
 
-const Navbar = () => {
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const toggleMenu = () => setMobileOpen(!mobileOpen);
-
+const Navbar = ({ currentView, setView }) => {
   return (
-    <nav className="navbar">
-      <div className="navbar-container">
-        <a href="#" className="brand-logo">
-          <div className="brand-icon-box">
-            <Navigation size={20} />
+    <header className="site-header">
+      <div className="header-container">
+        {/* Brand / Logo */}
+        <button
+          className="brand-link"
+          onClick={() => setView('home')}
+          aria-label="Go to Home"
+        >
+          <div className="brand-plane-icon">
+            <Plane size={22} className="plane-svg" />
           </div>
-          <span>Wanderlust AI</span>
-        </a>
-        <div className="nav-links desktop-only">
-          <a href="#" className="nav-link">Plan a Trip</a>
-          <a href="#" className="nav-link">My Trips</a>
-          <a href="#" className="nav-link">About</a>
-        </div>
-        <div className="nav-right desktop-only">
-          <div className="nav-badge">
-            <Sparkles size={14} /> AI-Powered
-          </div>
-          <button className="cta-btn">Explore Now</button>
-        </div>
-        <button className="mobile-menu-btn mobile-only" onClick={toggleMenu} aria-label="Toggle navigation">
-          {mobileOpen ? <X size={24} /> : <Menu size={24} />}
+          <span className="brand-title">AI Travel Planner</span>
         </button>
+
+        {/* Navigation items on right */}
+        <nav className="header-nav">
+          <button
+            className={`nav-text-btn ${currentView === 'home' ? 'active' : ''}`}
+            onClick={() => setView('home')}
+          >
+            Home
+          </button>
+
+          <button
+            className={`nav-text-btn ${currentView === 'saved' ? 'active' : ''}`}
+            onClick={() => setView('saved')}
+          >
+            Saved Trips
+          </button>
+
+          {currentView === 'home' ? (
+            <button
+              className="create-trip-pill-btn"
+              onClick={() => setView('create')}
+            >
+              Create Trip
+            </button>
+          ) : (
+            <div
+              className="user-avatar-badge"
+              title="Profile"
+              onClick={() => setView('saved')}
+            >
+              <img
+                src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80"
+                alt="User Profile Avatar"
+                className="user-avatar-img"
+              />
+            </div>
+          )}
+        </nav>
       </div>
-      {mobileOpen && (
-        <div className="mobile-menu">
-          <a href="#" className="nav-link" onClick={toggleMenu}>Plan a Trip</a>
-          <a href="#" className="nav-link" onClick={toggleMenu}>My Trips</a>
-          <a href="#" className="nav-link" onClick={toggleMenu}>About</a>
-          <div className="nav-badge mobile-only">
-            <Sparkles size={14} /> AI-Powered
-          </div>
-          <button className="cta-btn mobile-only">Explore Now</button>
-        </div>
-      )}
-    </nav>
+    </header>
   );
 };
 

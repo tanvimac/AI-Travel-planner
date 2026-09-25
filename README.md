@@ -152,6 +152,7 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
 
 ---
 
+
 ## 🧪 Verification & Testing
 
 The backend includes test scripts in `backend/tmp/`:
