@@ -5,9 +5,10 @@ import CreateTripView from './components/CreateTripView';
 import SavedTripsView from './components/SavedTripsView';
 import TripDetailsView from './components/TripDetailsView';
 import {
-  INITIAL_SAVED_TRIPS,
-  generateItineraryForTrip,
-} from './data/tripsData';
+  fetchAllTrips,
+  fetchTripById,
+  normalizeTrip,
+} from './services/api';
 import './App.css';
 import './index.css';
 
@@ -15,7 +16,7 @@ function App() {
   // Navigation view: 'home' | 'create' | 'saved' | 'details'
   const [currentView, setCurrentView] = useState('home');
 
-  // Initialize trips from localStorage or seed dataset
+  // Initialize trips state
   const [trips, setTrips] = useState(() => {
     try {
       const stored = localStorage.getItem('ai_travel_trips');
@@ -28,36 +29,35 @@ function App() {
     } catch (e) {
       console.error('Error loading stored trips:', e);
     }
-    return INITIAL_SAVED_TRIPS;
+    return [];
   });
 
   // Selected trip for details view
   const [selectedTrip, setSelectedTrip] = useState(() => trips[0] || null);
 
-  // Sync trips to localStorage
+  // Sync trips to localStorage as offline cache
   useEffect(() => {
     try {
-      localStorage.setItem('ai_travel_trips', JSON.stringify(trips));
+      if (trips && trips.length > 0) {
+        localStorage.setItem('ai_travel_trips', JSON.stringify(trips));
+      }
     } catch (e) {
       console.error('Error saving trips to localStorage:', e);
     }
   }, [trips]);
 
-  // Optionally fetch saved trips from backend on mount
+  // Fetch real trips from backend on mount
   useEffect(() => {
     const fetchBackendTrips = async () => {
       try {
-        const apiBaseUrl =
-          import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
-        const res = await fetch(`${apiBaseUrl}/api/trips`);
-        if (res.ok) {
-          const backendData = await res.json();
-          if (Array.isArray(backendData) && backendData.length > 0) {
-            console.log('Fetched trips from backend:', backendData);
-          }
+        const backendData = await fetchAllTrips();
+        if (Array.isArray(backendData) && backendData.length > 0) {
+          const normalized = backendData.map(normalizeTrip);
+          setTrips(normalized);
+          setSelectedTrip((prev) => prev || normalized[0]);
         }
       } catch (err) {
-        console.warn('Backend fetch notice:', err);
+        console.warn('Backend fetch notice (using cached trips):', err);
       }
     };
     fetchBackendTrips();
@@ -68,16 +68,34 @@ function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleTripCreated = (formData) => {
-    const newTrip = generateItineraryForTrip(formData);
-    setTrips((prev) => [newTrip, ...prev]);
-    setSelectedTrip(newTrip);
+  const handleTripCreated = (readyTrip) => {
+    const normalized = normalizeTrip(readyTrip);
+    setTrips((prev) => [
+      normalized,
+      ...prev.filter((t) => t.id !== normalized.id),
+    ]);
+    setSelectedTrip(normalized);
     setCurrentView('details');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleSelectTrip = (trip) => {
-    setSelectedTrip(trip);
+  const handleSelectTrip = async (trip) => {
+    // If details/itinerary are not yet populated, fetch full trip by ID
+    if (!trip.itinerary || trip.itinerary.length === 0) {
+      try {
+        const fullTrip = await fetchTripById(trip.id);
+        const normalized = normalizeTrip(fullTrip);
+        setSelectedTrip(normalized);
+        setTrips((prev) =>
+          prev.map((t) => (t.id === normalized.id ? normalized : t))
+        );
+      } catch (err) {
+        console.warn('Failed to fetch full trip details, using summary:', err);
+        setSelectedTrip(trip);
+      }
+    } else {
+      setSelectedTrip(trip);
+    }
     setCurrentView('details');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };

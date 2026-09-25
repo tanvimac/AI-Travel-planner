@@ -18,6 +18,26 @@ def _clean_json_string(text: str) -> str:
     return cleaned.strip()
 
 
+def _build_fallback_days(trip, activities: list) -> list[dict]:
+    day_plans = []
+    for day_info in activities:
+        day = day_info.get("day")
+        plan = ", ".join(day_info.get("activities", []))
+        if day is not None and plan:
+            day_plans.append({"day": day, "plan": plan})
+    if not day_plans:
+        total_days = getattr(trip, "days", 1) or 1
+        destination = getattr(trip, "destination", "Destination")
+        style = getattr(trip, "travel_style", "Custom")
+        interests = getattr(trip, "interests", "sightseeing")
+        for d in range(1, total_days + 1):
+            day_plans.append({
+                "day": d,
+                "plan": f"Explore {destination} highlights focusing on {interests} ({style} style)."
+            })
+    return day_plans
+
+
 class ItineraryAgent(Agent):
     """Final itinerary synthesis agent using Gemini LLM."""
 
@@ -81,34 +101,24 @@ class ItineraryAgent(Agent):
         # Fallback to stub behaviour if JSON parsing failed
         if not result or not isinstance(result, dict):
             logger.warning("ItineraryAgent falling back to stub day-by-day generator due to missing/invalid JSON. Raw: %r", content)
-            activities = activity.get("day_by_day", [])
-            day_plans = []
-            for day_info in activities:
-                day = day_info.get("day")
-                plan = ", ".join(day_info.get("activities", []))
-                day_plans.append({"day": day, "plan": plan})
+            day_plans = _build_fallback_days(trip, activity.get("day_by_day", []))
             return {
                 "title": f"Itinerary for {trip.destination}",
-                "summary": "Generated itinerary (fallback).",
+                "summary": destination.get("description") or f"Curated {trip.days}-day itinerary for {trip.destination}.",
                 "data": {"days": day_plans},
-                "markdown": "\n".join([f"**Day {d['day']}**: {d['plan']}" for d in day_plans]),
+                "markdown": "\n\n".join([f"### Day {d['day']}\n{d['plan']}" for d in day_plans]),
             }
 
         # Ensure required keys exist; if not, fall back to stub as above
         required_keys = {"title", "summary", "data", "markdown"}
         if not required_keys.issubset(result.keys()):
             logger.warning("ItineraryAgent missing required keys %s; falling back. Keys found: %s", required_keys - set(result.keys()), list(result.keys()))
-            activities = activity.get("day_by_day", [])
-            day_plans = []
-            for day_info in activities:
-                day = day_info.get("day")
-                plan = ", ".join(day_info.get("activities", []))
-                day_plans.append({"day": day, "plan": plan})
+            day_plans = _build_fallback_days(trip, activity.get("day_by_day", []))
             return {
                 "title": result.get("title") or f"Itinerary for {trip.destination}",
-                "summary": result.get("summary") or "Generated itinerary (fallback).",
+                "summary": result.get("summary") or destination.get("description") or f"Curated {trip.days}-day itinerary for {trip.destination}.",
                 "data": result.get("data") if (isinstance(result.get("data"), dict) and "days" in result.get("data", {})) else {"days": day_plans},
-                "markdown": result.get("markdown") or "\n".join([f"**Day {d['day']}**: {d['plan']}" for d in day_plans]),
+                "markdown": result.get("markdown") or "\n\n".join([f"### Day {d['day']}\n{d['plan']}" for d in day_plans]),
             }
 
         return result

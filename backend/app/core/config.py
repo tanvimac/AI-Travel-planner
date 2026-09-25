@@ -42,7 +42,7 @@ class Settings(BaseSettings):
     ANTHROPIC_API_KEY: Optional[str] = os.getenv("ANTHROPIC_API_KEY")
     LLM_PROVIDER: str = os.getenv("LLM_PROVIDER", "gemini")
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
-    GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-3.8-flash")
+    GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-3.5-flash")
     GEMINI_MIN_INTERVAL: float = float(os.getenv("GEMINI_MIN_INTERVAL", "1.0"))
 
 settings = Settings()

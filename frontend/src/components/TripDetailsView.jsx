@@ -26,11 +26,44 @@ const TripDetailsView = ({ trip, onBack }) => {
       {/* Hero Summary Card */}
       <div className="trip-hero-split-card">
         <div className="hero-split-image-box">
-          <img
-            src={trip.image}
-            alt={trip.destination}
-            className="hero-split-img"
-          />
+          {trip.image ? (
+            <img
+              src={trip.image}
+              alt={trip.destination}
+              className="hero-split-img"
+            />
+          ) : (
+            <div
+              style={{
+                width: '100%',
+                height: '100%',
+                minHeight: '220px',
+                background:
+                  'linear-gradient(135deg, #0B1F33 0%, #0E7490 100%)',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#ffffff',
+                padding: '2rem',
+                textAlign: 'center',
+              }}
+            >
+              <Bookmark size={36} style={{ marginBottom: '0.5rem', opacity: 0.9 }} />
+              <span style={{ fontSize: '1.2rem', fontWeight: 600 }}>
+                {trip.destination}
+              </span>
+              <span
+                style={{
+                  fontSize: '0.85rem',
+                  opacity: 0.8,
+                  marginTop: '0.25rem',
+                }}
+              >
+                AI Generated Itinerary
+              </span>
+            </div>
+          )}
         </div>
 
         <div className="hero-split-info-box">
@@ -141,13 +174,29 @@ const TripDetailsView = ({ trip, onBack }) => {
               <h3 className="sidebar-card-title">Trip Highlights</h3>
             </div>
             <ul className="highlights-list">
-              {trip.highlights &&
+              {trip.highlights && trip.highlights.length > 0 ? (
                 trip.highlights.map((highlight, hIdx) => (
                   <li key={hIdx} className="highlight-item">
                     <Check size={16} className="check-icon" />
                     <span>{highlight}</span>
                   </li>
-                ))}
+                ))
+              ) : (
+                <>
+                  <li className="highlight-item">
+                    <Check size={16} className="check-icon" />
+                    <span>Tailored for {trip.travelers} traveler(s)</span>
+                  </li>
+                  <li className="highlight-item">
+                    <Check size={16} className="check-icon" />
+                    <span>{trip.travelStyle} travel style curation</span>
+                  </li>
+                  <li className="highlight-item">
+                    <Check size={16} className="check-icon" />
+                    <span>Personalized daily schedule for {trip.destination}</span>
+                  </li>
+                </>
+              )}
             </ul>
           </div>
 
@@ -155,16 +204,36 @@ const TripDetailsView = ({ trip, onBack }) => {
           <div className="sidebar-card travel-tips-card">
             <div className="sidebar-card-header">
               <Lightbulb size={18} className="sidebar-header-yellow-icon" />
-              <h3 className="sidebar-card-title">Travel Tips</h3>
+              <h3 className="sidebar-card-title">Travel Details</h3>
             </div>
             <ul className="tips-list">
-              {trip.travelTips &&
+              {trip.travelTips && trip.travelTips.length > 0 ? (
                 trip.travelTips.map((tip, tIdx) => (
                   <li key={tIdx} className="tip-item">
                     <span className="tip-bullet">•</span>
                     <span>{tip}</span>
                   </li>
-                ))}
+                ))
+              ) : (
+                <>
+                  <li className="tip-item">
+                    <span className="tip-bullet">•</span>
+                    <span>Duration: {trip.days} days</span>
+                  </li>
+                  <li className="tip-item">
+                    <span className="tip-bullet">•</span>
+                    <span>
+                      Estimated Budget:{' '}
+                      {trip.formattedBudget ||
+                        `$ ${Number(trip.budget).toLocaleString()}`}
+                    </span>
+                  </li>
+                  <li className="tip-item">
+                    <span className="tip-bullet">•</span>
+                    <span>Status: {trip.status || 'Active'}</span>
+                  </li>
+                </>
+              )}
             </ul>
           </div>
         </div>

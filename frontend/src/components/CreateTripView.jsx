@@ -12,6 +12,8 @@ import {
   Loader2,
 } from 'lucide-react';
 
+import { createTripPlan, pollTripUntilReady } from '../services/api';
+
 const CreateTripView = ({ onBackHome, onTripCreated }) => {
   const [destination, setDestination] = useState('');
   const [days, setDays] = useState('7');
@@ -21,6 +23,7 @@ const CreateTripView = ({ onBackHome, onTripCreated }) => {
   const [travelStyle, setTravelStyle] = useState('Luxury');
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationStep, setGenerationStep] = useState(0);
+  const [errorMessage, setErrorMessage] = useState(null);
 
   const steps = [
     'Analyzing destination & travel preferences...',
@@ -33,55 +36,51 @@ const CreateTripView = ({ onBackHome, onTripCreated }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!destination.trim()) {
-      alert('Please enter a destination.');
+      setErrorMessage('Please enter a destination.');
       return;
     }
 
+    setErrorMessage(null);
     setIsGenerating(true);
     setGenerationStep(0);
-
-    // Animate progress steps for an interactive feel
-    const interval = setInterval(() => {
-      setGenerationStep((prev) => {
-        if (prev < steps.length - 1) {
-          return prev + 1;
-        }
-        clearInterval(interval);
-        return prev;
-      });
-    }, 700);
 
     const tripPayload = {
       destination: destination.trim(),
       days: parseInt(days, 10) || 7,
       travelers: parseInt(travelers, 10) || 2,
-      budget: parseInt(budget, 10) || 50000,
+      budget: parseFloat(budget) || 50000,
       interests: interests.trim(),
       travelStyle,
     };
 
-    try {
-      // Also try calling the real backend if available
-      const apiBaseUrl =
-        import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
-      fetch(`${apiBaseUrl}/api/plan`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(tripPayload),
-      }).catch((err) => {
-        // Safe backend background attempt
-        console.log('Backend sync notice (proceeding with local generator):', err);
-      });
-    } catch (err) {
-      console.log('Backend notification error:', err);
-    }
+    const stepInterval = setInterval(() => {
+      setGenerationStep((prev) => (prev < steps.length - 1 ? prev + 1 : prev));
+    }, 2000);
 
-    // After animation steps finish, complete trip creation
-    setTimeout(() => {
-      clearInterval(interval);
+    try {
+      // Step 1: Submit trip to real FastAPI backend
+      const planResult = await createTripPlan(tripPayload);
+
+      // Step 2: Poll backend until background agent orchestration completes
+      const readyTrip = await pollTripUntilReady(
+        planResult.id,
+        (_interim, attempt) => {
+          setGenerationStep((prev) =>
+            Math.min(steps.length - 1, Math.max(prev, Math.floor(attempt / 2)))
+          );
+        }
+      );
+
+      clearInterval(stepInterval);
       setIsGenerating(false);
-      onTripCreated(tripPayload);
-    }, 3200);
+      onTripCreated(readyTrip);
+    } catch (err) {
+      clearInterval(stepInterval);
+      setIsGenerating(false);
+      setErrorMessage(
+        err.message || 'Failed to generate itinerary. Please try again.'
+      );
+    }
   };
 
   return (
@@ -111,6 +110,26 @@ const CreateTripView = ({ onBackHome, onTripCreated }) => {
             </p>
           </div>
         </div>
+
+        {errorMessage && (
+          <div
+            className="create-error-banner"
+            style={{
+              padding: '0.85rem 1.25rem',
+              marginBottom: '1.25rem',
+              backgroundColor: '#FEF2F2',
+              border: '1px solid #F87171',
+              borderRadius: '8px',
+              color: '#B91C1C',
+              fontSize: '0.9rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+            }}
+          >
+            <span>⚠️ {errorMessage}</span>
+          </div>
+        )}
 
         {/* The Form */}
         <form onSubmit={handleSubmit} className="trip-form">

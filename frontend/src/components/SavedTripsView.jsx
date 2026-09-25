@@ -27,12 +27,29 @@ const SavedTripsView = ({ trips, onSelectTrip, onNewTrip }) => {
             <div className="trip-item-card" key={trip.id}>
               {/* Left thumbnail image */}
               <div className="trip-thumb-wrapper">
-                <img
-                  src={trip.image}
-                  alt={trip.destination}
-                  className="trip-thumbnail-img"
-                  loading="lazy"
-                />
+                {trip.image ? (
+                  <img
+                    src={trip.image}
+                    alt={trip.destination}
+                    className="trip-thumbnail-img"
+                    loading="lazy"
+                  />
+                ) : (
+                  <div
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      background:
+                        'linear-gradient(135deg, #0B1F33 0%, #0E7490 100%)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: '#ffffff',
+                    }}
+                  >
+                    <Bookmark size={24} />
+                  </div>
+                )}
               </div>
 
               {/* Middle details */}
@@ -56,6 +73,31 @@ const SavedTripsView = ({ trips, onSelectTrip, onNewTrip }) => {
                         `$ ${Number(trip.budget).toLocaleString()}`}
                     </span>
                   </span>
+                  {trip.status && (
+                    <span
+                      style={{
+                        padding: '0.2rem 0.5rem',
+                        borderRadius: '6px',
+                        fontSize: '0.75rem',
+                        fontWeight: 600,
+                        textTransform: 'capitalize',
+                        backgroundColor:
+                          trip.status === 'completed'
+                            ? '#DCFCE7'
+                            : trip.status === 'pending'
+                            ? '#FEF3C7'
+                            : '#FEE2E2',
+                        color:
+                          trip.status === 'completed'
+                            ? '#166534'
+                            : trip.status === 'pending'
+                            ? '#92400E'
+                            : '#991B1B',
+                      }}
+                    >
+                      {trip.status}
+                    </span>
+                  )}
                 </div>
 
                 {/* Tags row */}

@@ -46,6 +46,7 @@ def get_all_trips(db: Session) -> list[dict]:
                 "budget": t.budget,
                 "interests": t.interests,
                 "travelStyle": t.travel_style,
+                "status": t.status,
                 "created_at": t.created_at.isoformat() if t.created_at else None,
             }
             for t in trips
