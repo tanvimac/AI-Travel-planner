@@ -1,7 +1,9 @@
+from typing import List, Dict, Any, Optional
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
 from app.schemas.planner import TravelRequest
-from app.db.models import Trip
+from app.db.models.trip import Trip
+from app.agents.orchestrator import Orchestrator
 
 
 def create_travel_plan(request: TravelRequest, db: Session) -> dict:
@@ -13,6 +15,7 @@ def create_travel_plan(request: TravelRequest, db: Session) -> dict:
             budget=request.budget,
             interests=request.interests,
             travel_style=request.travelStyle or "Mid-range",
+            status="pending",
         )
         db.add(trip)
         db.commit()
@@ -27,6 +30,7 @@ def create_travel_plan(request: TravelRequest, db: Session) -> dict:
             "budget": trip.budget,
             "interests": trip.interests,
             "travelStyle": trip.travel_style,
+            "status": trip.status,
             "created_at": trip.created_at.isoformat() if trip.created_at else None,
         }
     except Exception as e:
@@ -53,6 +57,7 @@ def get_all_trips(db: Session) -> list[dict]:
         ]
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to fetch trips: {str(e)}")
+
 
 def get_trip_by_id(trip_id: int, db: Session) -> dict:
     try:
@@ -97,4 +102,24 @@ def get_trip_by_id(trip_id: int, db: Session) -> dict:
             status_code=500,
             detail=f"Failed to fetch trip: {str(e)}"
         )
-    
+
+
+class PlannerService:
+    """Service layer class for trip planning and multi-agent AI orchestration."""
+
+    def __init__(self, db: Session):
+        self.db = db
+
+    def create_plan(self, request: TravelRequest) -> dict:
+        return create_travel_plan(request, self.db)
+
+    def get_trips(self) -> list[dict]:
+        return get_all_trips(self.db)
+
+    def get_trip(self, trip_id: int) -> dict:
+        return get_trip_by_id(trip_id, self.db)
+
+    def generate_plan_sync(self, trip_id: int) -> dict:
+        orchestrator = Orchestrator()
+        orchestrator.run(trip_id)
+        return get_trip_by_id(trip_id, self.db)

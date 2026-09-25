@@ -59,3 +59,7 @@ class RouteProvider:
             "currency": "USD",
             "steps": steps,
         }
+
+
+RoutesProvider = RouteProvider
+

@@ -33,11 +33,40 @@ class ProviderException(AppException):
 
 
 class NotFoundException(AppException):
-    def __init__(self, resource: str, identifier: Any):
+    def __init__(
+        self,
+        resource: Optional[str] = None,
+        identifier: Optional[Any] = None,
+        message: Optional[str] = None,
+        details: Optional[Any] = None,
+    ):
+        if not message:
+            message = f"{resource or 'Resource'} with identifier '{identifier}' was not found."
         super().__init__(
             code="RESOURCE_NOT_FOUND",
-            message=f"{resource} with identifier '{identifier}' was not found.",
+            message=message,
             status_code=status.HTTP_404_NOT_FOUND,
+            details=details,
+        )
+
+
+class ValidationException(AppException):
+    def __init__(self, message: str = "Validation failed for submitted request", details: Optional[Any] = None):
+        super().__init__(
+            code="VALIDATION_ERROR",
+            message=message,
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            details=details,
+        )
+
+
+class ConflictException(AppException):
+    def __init__(self, message: str = "Resource conflict occurred", details: Optional[Any] = None):
+        super().__init__(
+            code="RESOURCE_CONFLICT",
+            message=message,
+            status_code=status.HTTP_409_CONFLICT,
+            details=details,
         )
 
 
@@ -78,14 +107,16 @@ def format_error_response(
     request: Request,
     details: Optional[Any] = None,
 ) -> dict:
-    return {
+    resp = {
         "error": {
             "code": code,
             "message": message,
             "request_id": _get_request_id(request),
-            **({"details": details} if details is not None else {}),
         }
     }
+    if details is not None:
+        resp["error"]["details"] = details
+    return resp
 
 
 async def app_exception_handler(request: Request, exc: AppException) -> JSONResponse:
