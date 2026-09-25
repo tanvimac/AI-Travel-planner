@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+test_venv/
+env/
+*.egg-info/
+.pytest_cache/
+
+# Environment variables & secrets (CRITICAL)
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+
+# Node / Frontend
+node_modules/
+dist/
+dist-ssr/
+*.local
+
+# OS & Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Logs & scratch
+*.log
+scratch/
