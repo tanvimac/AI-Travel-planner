@@ -1,4 +1,3 @@
-import React from 'react';
 import { Star, Tag, Clock } from 'lucide-react';
 
 const FeaturesSection = () => (

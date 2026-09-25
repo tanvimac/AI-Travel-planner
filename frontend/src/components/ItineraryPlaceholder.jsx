@@ -1,4 +1,3 @@
-import React from 'react';
 
 const ItineraryPlaceholder = () => (
   <div className="trip-ticket-card">

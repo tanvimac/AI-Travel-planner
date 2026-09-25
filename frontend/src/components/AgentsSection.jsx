@@ -1,4 +1,3 @@
-import React from 'react';
 import { MapPin, Globe, Hotel, Coffee, BarChart, Clipboard } from 'lucide-react';
 import '../index.css';
 

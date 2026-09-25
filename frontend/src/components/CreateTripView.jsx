@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
   ArrowLeft,
   Briefcase,
@@ -10,7 +10,6 @@ import {
   Star,
   Sparkles,
   Loader2,
-  CheckCircle2,
 } from 'lucide-react';
 
 const CreateTripView = ({ onBackHome, onTripCreated }) => {

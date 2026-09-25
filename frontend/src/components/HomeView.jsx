@@ -1,4 +1,3 @@
-import React from 'react';
 import { ArrowRight, Sparkles, Map, Heart, Zap } from 'lucide-react';
 import heroFuji from '../assets/hero_fuji.jpg';
 

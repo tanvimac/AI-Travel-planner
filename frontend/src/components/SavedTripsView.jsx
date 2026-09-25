@@ -1,11 +1,9 @@
-import React from 'react';
 import {
   Bookmark,
   Calendar,
   Users,
   DollarSign,
   ArrowRight,
-  PlusCircle,
 } from 'lucide-react';
 
 const SavedTripsView = ({ trips, onSelectTrip, onNewTrip }) => {

@@ -1,4 +1,3 @@
-import React from 'react';
 
 const HowItWorks = () => (
   <section className="how-it-works" style={{ padding: '2rem', backgroundColor: 'var(--cream)' }}>

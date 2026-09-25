@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import Navbar from './components/Navbar';
 import HomeView from './components/HomeView';
 import CreateTripView from './components/CreateTripView';
@@ -57,7 +57,7 @@ function App() {
           }
         }
       } catch (err) {
-        // Safe backend fetch
+        console.warn('Backend fetch notice:', err);
       }
     };
     fetchBackendTrips();
