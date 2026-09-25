@@ -15,6 +15,7 @@ logger = logging.getLogger("replan_api")
 router = APIRouter(prefix="/replan", tags=["Dynamic Replanner"])
 
 
+@router.post("", status_code=status.HTTP_200_OK)
 @router.post("/", status_code=status.HTTP_200_OK)
 def replan_trip(
     payload: ReplanRequest,

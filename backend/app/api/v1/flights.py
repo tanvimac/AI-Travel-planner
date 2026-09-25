@@ -1,6 +1,7 @@
 from typing import Optional
 from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
+from pydantic import BaseModel, Field
 from app.db.session import get_db
 from app.db.models.travel import Flight, Reservation
 from app.db.models.trip import Trip
@@ -9,6 +10,17 @@ from app.core.errors import NotFoundException
 
 router = APIRouter(prefix="/flights", tags=["Flights"])
 provider = FlightProvider()
+
+
+class FlightReserveRequest(BaseModel):
+    trip_id: int
+    airline: str = Field(..., min_length=1)
+    flight_number: str = Field(..., min_length=1)
+    departure_airport: str = Field(..., min_length=2)
+    arrival_airport: str = Field(..., min_length=2)
+    price: float = Field(..., ge=0.0)
+    currency: str = "USD"
+    cabin_class: str = "Economy"
 
 
 @router.get("/search")
@@ -41,60 +53,54 @@ def search_flights(
 
 @router.post("/reserve", status_code=status.HTTP_201_CREATED)
 def reserve_flight(
-    trip_id: int,
-    airline: str,
-    flight_number: str,
-    departure_airport: str,
-    arrival_airport: str,
-    price: float,
-    currency: str = "USD",
-    cabin_class: str = "Economy",
+    payload: FlightReserveRequest,
     db: Session = Depends(get_db),
 ):
     """Add a flight to trip and record a confirmed reservation."""
-    trip = db.query(Trip).filter(Trip.id == trip_id).first()
+    trip = db.query(Trip).filter(Trip.id == payload.trip_id).first()
     if not trip:
-        raise NotFoundException(resource="Trip", identifier=trip_id)
+        raise NotFoundException(resource="Trip", identifier=payload.trip_id)
 
     flight = Flight(
         trip_id=trip.id,
-        airline=airline,
-        flight_number=flight_number,
-        departure_airport=departure_airport,
-        arrival_airport=arrival_airport,
-        price=price,
-        currency=currency,
-        cabin_class=cabin_class,
+        airline=payload.airline,
+        flight_number=payload.flight_number,
+        departure_airport=payload.departure_airport,
+        arrival_airport=payload.arrival_airport,
+        price=payload.price,
+        currency=payload.currency,
+        cabin_class=payload.cabin_class,
         status="confirmed",
     )
     db.add(flight)
+    db.flush()
 
     reservation = Reservation(
         trip_id=trip.id,
         reservation_type="flight",
-        reference_code=flight_number,
-        provider_name=airline,
+        reference_code=payload.flight_number,
+        provider_name=payload.airline,
         status="confirmed",
-        total_price=price,
-        currency=currency,
+        total_price=payload.price,
+        currency=payload.currency,
         booking_details={
-            "flight_number": flight_number,
-            "route": f"{departure_airport} -> {arrival_airport}",
-            "cabin": cabin_class,
+            "flight_id": flight.id,
+            "flight_number": payload.flight_number,
+            "origin": payload.departure_airport,
+            "destination": payload.arrival_airport,
+            "cabin_class": payload.cabin_class,
         },
     )
     db.add(reservation)
     db.commit()
-    db.refresh(flight)
+    db.refresh(reservation)
 
     return {
+        "status": "success",
+        "message": f"Flight {payload.flight_number} reserved successfully",
         "flight_id": flight.id,
         "reservation_id": reservation.id,
-        "status": "confirmed",
-        "details": {
-            "airline": flight.airline,
-            "flight_number": flight.flight_number,
-            "total_price": flight.price,
-            "currency": flight.currency,
-        },
+        "reference_code": reservation.reference_code,
+        "total_price": payload.price,
+        "currency": payload.currency,
     }

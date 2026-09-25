@@ -33,10 +33,15 @@ def plan_route(request: RouteRequest, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(route)
 
-    return {
+    route_dict = {
         "id": route.id,
         **result,
         "created_at": route.created_at.isoformat(),
+    }
+    return {
+        "status": "success",
+        "route": route_dict,
+        **route_dict,
     }
 
 
@@ -44,7 +49,7 @@ def plan_route(request: RouteRequest, db: Session = Depends(get_db)):
 def get_routes_history(limit: int = 20, db: Session = Depends(get_db)):
     """Retrieve recent calculated transit and navigation routes."""
     routes = db.query(Route).order_by(Route.id.desc()).limit(limit).all()
-    return [
+    routes_list = [
         {
             "id": r.id,
             "origin": r.origin,
@@ -59,3 +64,8 @@ def get_routes_history(limit: int = 20, db: Session = Depends(get_db)):
         }
         for r in routes
     ]
+    return {
+        "status": "success",
+        "count": len(routes_list),
+        "routes": routes_list,
+    }

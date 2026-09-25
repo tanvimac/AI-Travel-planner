@@ -10,6 +10,7 @@ provider = WeatherProvider()
 
 
 @router.get("")
+@router.get("/")
 def get_weather(
     city: str = Query(..., min_length=2, description="Target city for weather forecast"),
     days: int = Query(default=5, ge=1, le=7),
@@ -37,4 +38,8 @@ def get_weather(
     except Exception:
         db.rollback()
 
-    return data
+    return {
+        "status": "success",
+        "weather": data,
+        **data,
+    }

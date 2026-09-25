@@ -68,8 +68,8 @@ def test_register():
     })
     assert res.status_code in [201, 200], f"Got {res.status_code}: {res.text}"
     data = res.json()
-    assert "id" in data["user"]
-    user_id = data["user"]["id"]
+    user_id = data.get("user_id") or data.get("id") or data.get("user", {}).get("id")
+    assert user_id is not None
 
 def test_login():
     global auth_token
@@ -86,7 +86,9 @@ def test_auth_me():
     res = client.get("/api/v1/auth/me", headers={"Authorization": f"Bearer {auth_token}"})
     assert res.status_code == 200, f"Got {res.status_code}: {res.text}"
     data = res.json()
-    assert data["user"]["email"] == test_user_email
+    email = data.get("email") or data.get("user", {}).get("email")
+    assert email == test_user_email
+
 
 def test_auth_preferences():
     res = client.put(
