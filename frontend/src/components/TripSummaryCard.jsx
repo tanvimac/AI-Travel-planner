@@ -1,4 +1,3 @@
-import React from 'react';
 import { MapPin, Calendar, Users, Wallet, Sparkles, Compass, Navigation } from 'lucide-react';
 
 const TripSummaryCard = ({ data }) => (

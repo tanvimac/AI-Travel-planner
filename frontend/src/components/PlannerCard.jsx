@@ -1,4 +1,3 @@
-import React from 'react';
 import { MapPin, Calendar, Users, Wallet, Sparkles, Compass, Navigation, ArrowRight, Loader2 } from 'lucide-react';
 import NumberInput from './NumberInput';
 import TravelStyleSelector from './TravelStyleSelector';

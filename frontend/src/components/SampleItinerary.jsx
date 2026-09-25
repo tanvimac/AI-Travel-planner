@@ -1,4 +1,3 @@
-import React from 'react';
 
 const SampleItinerary = () => (
   <section className="sample-itinerary" style={{ padding: '2rem', backgroundColor: 'var(--cream)' }}>
