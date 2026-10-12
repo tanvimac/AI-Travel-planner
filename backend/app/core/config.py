@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from pydantic_settings import BaseSettings, NoDecode
-
+from pydantic import field_validator
 class Settings(BaseSettings):
     # Core app metadata
     PROJECT_NAME: str = os.getenv("PROJECT_NAME", "AI Travel Planner")
@@ -17,6 +17,7 @@ class Settings(BaseSettings):
 
     # CORS origins (comma-separated list)
     # CORS origins (comma‑separated list). Use NoDecode to avoid JSON parsing.
+    # CORS origins (comma‑separated list). NoDecode is not needed – the validator will split a raw string from the environment into a list.
     CORS_ORIGINS: Annotated[list[str], NoDecode] = [
         origin.strip()
         for origin in os.getenv(
@@ -26,6 +27,19 @@ class Settings(BaseSettings):
         if origin.strip()
     ]
 
+    # ------------------------------------------------------------
+    # Convert a raw comma‑separated string into a list before validation.
+    # ------------------------------------------------------------
+    @field_validator("CORS_ORIGINS", mode="before")
+    def _parse_cors_origins(cls, v: object) -> list[str] | object:  # noqa: D401
+        """
+        If the environment provides a plain string, split it on commas
+        and strip whitespace. If the value is already a list (the
+        default above), return it unchanged.
+        """
+        if isinstance(v, str):
+            return [origin.strip() for origin in v.split(",") if origin.strip()]
+        return v
     # Database configuration (can be overridden by full DATABASE_URL)
     DB_HOST: str = os.getenv("DB_HOST", "localhost")
     DB_PORT: str = os.getenv("DB_PORT", "5432")
