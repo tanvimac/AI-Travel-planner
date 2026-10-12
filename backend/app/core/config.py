@@ -1,10 +1,10 @@
 import os
-from typing import Optional
+from typing import Optional, Annotated
 
 from dotenv import load_dotenv
 load_dotenv()
 
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, NoDecode
 
 class Settings(BaseSettings):
     # Core app metadata
@@ -16,7 +16,8 @@ class Settings(BaseSettings):
     VERSION: str = os.getenv("VERSION", "0.1.0")
 
     # CORS origins (comma-separated list)
-    CORS_ORIGINS: list[str] = [
+    # CORS origins (comma‑separated list). Use NoDecode to avoid JSON parsing.
+    CORS_ORIGINS: Annotated[list[str], NoDecode] = [
         origin.strip()
         for origin in os.getenv(
             "CORS_ORIGINS",
